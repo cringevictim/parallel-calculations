@@ -75,10 +75,11 @@ void parallelSubtract(SingleVectorMatrix<int>& A, SingleVectorMatrix<int>& B, Si
         t.join();
     }
 }
-
+// TODO: .csv file output
 int main() {
+    int size = 30000;
     srand(time(0));
-    SingleVectorMatrix<int> A(15000, 15000), B(15000, 15000), C(15000, 15000);
+    SingleVectorMatrix<int> A(size, size), B(size, size), C(size, size);
     A.fillRandom();
     B.fillRandom();
 
