@@ -5,38 +5,56 @@
 #include <thread>
 #include <chrono>
 #include <algorithm>
+#include <fstream>
 
-int RandomNumber() {
+inline int random_number() {
     return std::rand() % 10;
 }
 
-template <typename DataType>
-class SingleVectorMatrix {
+template <typename data_type>
+class single_vector_matrix {
 private:
-    std::vector<DataType> data;
+    std::vector<data_type> data;
     int rows, cols;
 
 public:
-    SingleVectorMatrix(int r, int c) : rows(r), cols(c), data(r* c, 0) {}
+    single_vector_matrix(int r, int c) : rows(r), cols(c), data(r* c, 0) {}
 
-    void fillRandom() {
-        std::generate(data.begin(), data.end(), RandomNumber);
+    void fill_random() {
+        std::generate(data.begin(), data.end(), random_number);
     }
 
-    int getRows() const { return rows; }
-    int getCols() const { return cols; }
+    void parallel_fill_random(int num_threads) {
+        std::vector<std::thread> threads;
+        int rows_per_thread = rows / num_threads;
+        for (int i = 0; i < num_threads; ++i) {
+            int start_row = i * rows_per_thread;
+            int end_row = (i == num_threads - 1) ? rows : start_row + rows_per_thread;
+            threads.push_back(std::thread([this, start_row, end_row]() {
+                for (int r = start_row; r < end_row; ++r)
+                    for (int c = 0; c < cols; ++c)
+                        set_at(r, c, random_number());
+                }));
+        }
+        for (auto& t : threads) {
+            t.join();
+        }
+    }
 
-    DataType at(int r, int c) const {
+    int get_rows() const { return rows; }
+    int get_cols() const { return cols; }
+
+    data_type at(int r, int c) const {
         int total_idx = r * cols + c;
         return data[total_idx];
     }
 
-    void setAt(int r, int c, DataType value) {
+    void set_at(int r, int c, data_type value) {
         int total_idx = r * cols + c;
         data[total_idx] = value;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const SingleVectorMatrix& m) {
+    friend std::ostream& operator<<(std::ostream& out, const single_vector_matrix& m) {
         int total_idx = 0;
         for (int i = 0; i < m.rows; ++i) {
             for (int j = 0; j < m.cols; ++j, total_idx++) {
@@ -47,98 +65,68 @@ public:
         return out;
     }
 
-    void subtractMatrix(const SingleVectorMatrix& other, SingleVectorMatrix& result, int startRow, int endRow) { // перевірити вираз на правильність
-        for (int i = startRow; i < endRow; ++i) {
+    void subtract_matrix(const single_vector_matrix& other, single_vector_matrix& result, int start_row, int end_row) {
+        for (int i = start_row; i < end_row; ++i) {
             for (int j = 0; j < cols; ++j) {
-                result.setAt(i, j, at(i, j) - other.at(i, j));
+                result.set_at(i, j, at(i, j) - other.at(i, j) * 2);
             }
         }
     }
 };
 
-void parallelSubtract(SingleVectorMatrix<int>& A, SingleVectorMatrix<int>& B, SingleVectorMatrix<int>& C, int numThreads) {
+void parallel_subtract(single_vector_matrix<int>& A, single_vector_matrix<int>& B, single_vector_matrix<int>& C, int num_threads) {
     std::vector<std::thread> threads;
-    int rowsPerThread = A.getRows() / numThreads;
+    int rows_per_thread = A.get_rows() / num_threads;
 
-    for (int i = 0; i < numThreads; ++i) {
-        int startRow = i * rowsPerThread;
-        int endRow = (i + 1) * rowsPerThread;
+    for (int i = 0; i < num_threads; ++i) {
+        int start_row = i * rows_per_thread;
+        int end_row = (i + 1) * rows_per_thread;
 
-        if (i == numThreads - 1) {
-            endRow = A.getRows();
+        if (i == num_threads - 1) {
+            end_row = A.get_rows();
         }
 
-        threads.push_back(std::thread(&SingleVectorMatrix<int>::subtractMatrix, &A, std::ref(B), std::ref(C), startRow, endRow));
+        threads.push_back(std::thread(&single_vector_matrix<int>::subtract_matrix, &A, std::ref(B), std::ref(C), start_row, end_row));
     }
 
     for (auto& t : threads) {
         t.join();
     }
 }
-// TODO: .csv file output
-int main() {
-    int size = 30000;
-    srand(time(0));
-    SingleVectorMatrix<int> A(size, size), B(size, size), C(size, size);
-    A.fillRandom();
-    B.fillRandom();
 
-    int numThreads = 2048;
-    std::cout << "Num Threads: " << numThreads << std::endl;
+void start_task(int num_threads, int size, std::ofstream& log_file) {
+    single_vector_matrix<int> A(size, size), B(size, size), C(size, size);
     auto start = std::chrono::high_resolution_clock::now();
-    parallelSubtract(A, B, C, numThreads);
+    A.parallel_fill_random(num_threads);
+    B.parallel_fill_random(num_threads);
+    parallel_subtract(A, B, C, num_threads);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
-    std::cout << "Time elapsed for parallel subtract: " << elapsed.count() << " s\n";
+    std::cout << "Threads: [" << num_threads << "]; Time elapsed: " << elapsed.count() << " s." << std::endl;
+    log_file << num_threads << "," << elapsed.count() << "\n";
+}
 
-    numThreads = 32;
-    std::cout << "Num Threads: " << numThreads << std::endl;
-    start = std::chrono::high_resolution_clock::now();
-    parallelSubtract(A, B, C, numThreads);
-    end = std::chrono::high_resolution_clock::now();
-    elapsed = end - start;
-    std::cout << "Time elapsed for parallel subtract: " << elapsed.count() << " s\n";
+int main() {
+    srand(time(0));
+    int size = 20000;
+    std::ofstream log_file("performance_data.csv");
+    log_file << "Threads,Time\n";
 
-    numThreads = 16;
-    std::cout << "Num Threads: " << numThreads << std::endl;
-    start = std::chrono::high_resolution_clock::now();
-    parallelSubtract(A, B, C, numThreads);
-    end = std::chrono::high_resolution_clock::now();
-    elapsed = end - start;
-    std::cout << "Time elapsed for parallel subtract: " << elapsed.count() << " s\n";
+    std::vector<int> thread_counts = { 1, 4, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384 };
 
-    numThreads = 8;
-    std::cout << "Num Threads: " << numThreads << std::endl;
-    start = std::chrono::high_resolution_clock::now();
-    parallelSubtract(A, B, C, numThreads);
-    end = std::chrono::high_resolution_clock::now();
-    elapsed = end - start;
-    std::cout << "Time elapsed for parallel subtract: " << elapsed.count() << " s\n";
+    for (int threads : thread_counts) {
+        start_task(threads, size, log_file);
+    }
 
-    numThreads = 4;
-    std::cout << "Num Threads: " << numThreads << std::endl;
-    start = std::chrono::high_resolution_clock::now();
-    parallelSubtract(A, B, C, numThreads);
-    end = std::chrono::high_resolution_clock::now();
-    elapsed = end - start;
-    std::cout << "Time elapsed for parallel subtract: " << elapsed.count() << " s\n";
-
-    numThreads = 2;
-    std::cout << "Num Threads: " << numThreads << std::endl;
-    start = std::chrono::high_resolution_clock::now();
-    parallelSubtract(A, B, C, numThreads);
-    end = std::chrono::high_resolution_clock::now();
-    elapsed = end - start;
-    std::cout << "Time elapsed for parallel subtract: " << elapsed.count() << " s\n";
-
-    numThreads = 1;
-    std::cout << "Num Threads: " << numThreads << std::endl;
-    start = std::chrono::high_resolution_clock::now();
-    parallelSubtract(A, B, C, numThreads);
-    end = std::chrono::high_resolution_clock::now();
-    elapsed = end - start;
-    std::cout << "Time elapsed for parallel subtract: " << elapsed.count() << " s\n";
-
-
+    log_file.close();
     return 0;
 }
+
+
+
+
+
+
+
+
+
