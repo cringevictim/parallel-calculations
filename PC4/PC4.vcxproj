@@ -130,9 +130,6 @@
   <ItemGroup>
     <ClCompile Include="PC4_server.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="single_vector_matrix.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
