@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{dcd21d6d-43a0-4f78-8c9f-11da8f2dd027}</ProjectGuid>
-    <RootNamespace>PC4client</RootNamespace>
+    <ProjectGuid>{b9d38068-37bb-49ab-a876-88083f067143}</ProjectGuid>
+    <RootNamespace>PC5</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,11 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="PC4_client.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="matrix.h" />
-    <ClInclude Include="single_vector_matrix.h" />
+    <ClCompile Include="PC5.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
