@@ -32,7 +32,7 @@ void SendCommand(SOCKET connectSocket, const std::string& command) {
     send(connectSocket, command.c_str(), command.size(), 0);
 }
 
-void ReceiveResponses(SOCKET connectSocket) {
+void ReceiveResponses(SOCKET connectSocket) { //TODO: Add timeout;
     char buffer[BUFFER_SIZE];
     while (true) {
         int recvResult = recv(connectSocket, buffer, BUFFER_SIZE, 0);

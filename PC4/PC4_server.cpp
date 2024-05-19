@@ -25,6 +25,11 @@ std::unordered_map<SOCKET, std::unordered_map<int, Task>> clientTasks;
 std::mutex taskMutex;
 std::condition_variable taskCv;
 bool serverRunning = true;
+void dbg_count() {
+    static int num = 1;
+    std::cout << num << std::endl;
+    num++;
+}
 
 void PrintMatrix(const int* matrix, int size, const std::string& matrixName) {
     std::cout << matrixName << ":\n";
@@ -41,15 +46,14 @@ void HandleClient(SOCKET clientSocket) {
 
     while (serverRunning) {
         char buffer[BUFFER_SIZE];
-        int recvResult = recv(clientSocket, buffer, BUFFER_SIZE, 0);
+        int recvResult = recv(clientSocket, buffer, BUFFER_SIZE-1, 0);
+        //std::cout << recvResult << std::endl;
         if (recvResult <= 0) break;
         buffer[recvResult] = '\0';
-
         std::string command(buffer);
         std::istringstream iss(command);
         std::string cmd;
         iss >> cmd;
-
         if (cmd == "process") {
             int matrixSize, taskId;
             iss >> matrixSize >> taskId;
@@ -60,7 +64,7 @@ void HandleClient(SOCKET clientSocket) {
                 std::unique_lock<std::mutex> lock(taskMutex);
                 clientTasks[clientSocket][taskId] = Task{ "", matrixSize, PENDING };
             }
-
+            std::cout << "dbg" << std::endl;
             std::thread([clientSocket, matrixSize, taskId, matrixData]() {
                 std::istringstream matrixStream(matrixData);
                 int* matrixA = new int[matrixSize * matrixSize];
