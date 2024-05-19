@@ -21,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{81ad512a-b2f7-4502-a942-c0dd9b2df87a}</ProjectGuid>
-    <RootNamespace>PC4</RootNamespace>
+    <ProjectGuid>{dcd21d6d-43a0-4f78-8c9f-11da8f2dd027}</ProjectGuid>
+    <RootNamespace>PC4client</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>PC4_server</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -128,7 +127,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="PC4_server.cpp" />
+    <ClCompile Include="PC4_client.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="matrix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

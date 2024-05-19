@@ -2,6 +2,7 @@
 #include <queue>
 #include <shared_mutex>
 
+
 template <typename task_type_t>
 class task_queue {
 public:
@@ -69,6 +70,7 @@ bool task_queue<task_type_t>::pop(task_type_t& task) {
 template <typename task_type_t>
 template <typename... arguments>
 inline void task_queue<task_type_t>::emplace(arguments&&... parameters) {
+    
     write_lock _(m_rw_lock);
     m_tasks.emplace(std::forward<arguments>(parameters)...);
 }

@@ -9,6 +9,8 @@
 #include <random>
 #include <numeric>
 
+//#include "tracy/Tracy.hpp"
+
 class thread_pool {
 public:
     thread_pool();
@@ -39,6 +41,7 @@ private:
 
 template <typename task_t, typename... arguments>
 void thread_pool::add_task(task_t&& task, arguments&&... parameters) {
+    //ZoneScoped;
     {
         read_lock _(m_rw_lock);
         if (!working_unsafe()) {

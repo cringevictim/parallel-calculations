@@ -8,7 +8,7 @@
 #include <fstream>
 
 inline int random_number() {
-    return std::rand() % 10;
+    return std::rand() % 100;
 }
 
 template <typename data_type>
@@ -102,31 +102,24 @@ void start_task(int num_threads, int size, std::ofstream& log_file) {
     parallel_subtract(A, B, C, num_threads);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
-    std::cout << "Threads: [" << num_threads << "]; Time elapsed: " << elapsed.count() << " s." << std::endl;
-    log_file << num_threads << "," << elapsed.count() << "\n";
+    std::cout << "Threads: [" << num_threads << "]; Matrix Size: [" << size << "]; Time elapsed: " << elapsed.count() << " s." << std::endl;
+    log_file << num_threads << "," << size << "," << elapsed.count() << "\n";
 }
 
 int main() {
     srand(time(0));
-    int size = 20000;
     std::ofstream log_file("performance_data.csv");
-    log_file << "Threads,Time\n";
+    log_file << "Threads,Matrix Size,Time\n";
 
-    std::vector<int> thread_counts = { 1, 4, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384 };
+    std::vector<int> sizes = { 1000, 5000, 10000, 15000, 20000 };
+    std::vector<int> thread_counts = { 1, 4, 8, 12, 16, 24, 32, 64, 128, 256, 512 };
 
-    for (int threads : thread_counts) {
-        start_task(threads, size, log_file);
+    for (int size : sizes) {
+        for (int threads : thread_counts) {
+            start_task(threads, size, log_file);
+        }
     }
 
     log_file.close();
     return 0;
 }
-
-
-
-
-
-
-
-
-

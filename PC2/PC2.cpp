@@ -3,15 +3,21 @@
 #include <random>
 #include "global.h"
 
+//#define TRACY_ENABLE
+
+//#include "tracy/Tracy.hpp"
+
+
 void sampleTask(int id, int sleeping_time) {
     std::this_thread::sleep_for(std::chrono::seconds(sleeping_time));
 
     g_console_lock.lock();
-    std::cout << "Task " << id << " executed on thread " << std::this_thread::get_id() << " and lasted " << sleeping_time << " seconds." << std::endl;
+    std::cout << "Task " << id << " was executed on thread " << std::this_thread::get_id() << " and lasted " << sleeping_time << " seconds." << std::endl;
     g_console_lock.unlock();
 }
 
 int main() {
+    //ZoneScoped;
     thread_pool pool;
 
     pool.initialize(2, 3, 10);

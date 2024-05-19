@@ -6,6 +6,9 @@
 
 #include <cassert>
 
+//#include "tracy/Tracy.hpp"
+
+
 thread_pool::thread_pool() = default;
 
 thread_pool::~thread_pool() {
@@ -13,6 +16,7 @@ thread_pool::~thread_pool() {
 }
 
 void thread_pool::initialize(size_t workers_per_queue, size_t queues_count, size_t queue_size) {
+    //ZoneScoped;
     assert(workers_per_queue > 0 && queues_count > 0);
     write_lock _(m_rw_lock);
 
@@ -39,6 +43,7 @@ void thread_pool::initialize(size_t workers_per_queue, size_t queues_count, size
 }
 
 void thread_pool::terminate() {
+    //ZoneScoped;
     {
         write_lock _(m_rw_lock);
         if (!m_initialized) return;
@@ -56,7 +61,9 @@ void thread_pool::terminate() {
 }
 
 void thread_pool::routine(size_t queue_id) {
+    
     while (true) {
+        //ZoneScopedN("Worker Routine");
         bool task_acquired = false;
         std::function<void()> task;
         {
