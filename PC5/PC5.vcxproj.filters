@@ -19,4 +19,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="index.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="page2.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="locustfile.py">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

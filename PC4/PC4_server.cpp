@@ -11,7 +11,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #define DEFAULT_PORT "27015"
-#define BUFFER_SIZE 100000 // 10000 x 10000 int req ~400MB
+#define BUFFER_SIZE 1000000 // 10000 x 10000 int req ~400MB
 
 enum TaskStatus { PENDING, COMPLETED };
 
@@ -64,7 +64,6 @@ void HandleClient(SOCKET clientSocket) {
                 std::unique_lock<std::mutex> lock(taskMutex);
                 clientTasks[clientSocket][taskId] = Task{ "", matrixSize, PENDING };
             }
-            std::cout << "dbg" << std::endl;
             std::thread([clientSocket, matrixSize, taskId, matrixData]() {
                 std::istringstream matrixStream(matrixData);
                 int* matrixA = new int[matrixSize * matrixSize];

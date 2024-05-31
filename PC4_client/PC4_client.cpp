@@ -10,7 +10,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #define DEFAULT_PORT "27015"
-#define BUFFER_SIZE 100000 // 10000 x 10000 int матриця потребує 400MB
+#define BUFFER_SIZE 1000000 // 10000 x 10000 int матриця потребує 400MB
 
 void PrintMatrix(const int* matrix, int size, const std::string& matrixName) {
     std::cout << matrixName << ":\n";
@@ -35,7 +35,7 @@ void SendCommand(SOCKET connectSocket, const std::string& command) {
 void ReceiveResponses(SOCKET connectSocket) { //TODO: Add timeout;
     char buffer[BUFFER_SIZE];
     while (true) {
-        int recvResult = recv(connectSocket, buffer, BUFFER_SIZE, 0);
+        int recvResult = recv(connectSocket, buffer, BUFFER_SIZE-1, 0);
         if (recvResult <= 0) break;
         buffer[recvResult] = '\0';
         std::string response(buffer);
@@ -64,7 +64,11 @@ void ProcessCommand(SOCKET connectSocket, int size, int taskId) {
         oss << matrixB[i] << " ";
     }
 
-    SendCommand(connectSocket, oss.str());
+    if (sizeof(char) * BUFFER_SIZE > sizeof(oss.str())) {
+        SendCommand(connectSocket, oss.str());
+    }
+    else std::cerr << "Error: sending data is too large." << std::endl;
+    
 
     delete[] matrixA;
     delete[] matrixB;
