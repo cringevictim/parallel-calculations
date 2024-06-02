@@ -6,14 +6,10 @@
 #include <sstream>
 #include <thread>
 #include <mutex>
-#include <condition_variable>
-#include <atomic>
 
 #pragma comment(lib, "ws2_32.lib")
 
 #define PORT 8080
-
-const size_t totalConnectionsAllowed = INTMAX_MAX;
 
 std::string readFile(const std::string& path) {
     std::ifstream file(path);
@@ -28,7 +24,7 @@ bool endsWith(const std::string& str, const std::string& suffix) {
 std::string getContentType(const std::string& path) {
     if (endsWith(path, ".html")) return "text/html";
     if (endsWith(path, ".css")) return "text/css";
-    if (endsWith(path, ".js")) return "application/javascript";
+    if (endsWith(path, ".ico")) return "image/x-icon";
     return "text/plain";
 }
 
@@ -36,16 +32,13 @@ void sendResponse(SOCKET clientSocket, const std::string& response) {
     send(clientSocket, response.c_str(), response.size(), 0);
 }
 
-std::atomic<int> activeThreads(0);
 std::mutex mtx;
-std::condition_variable cv;
+void lockedConsoleOutput(std::string str) {
+    std::lock_guard<std::mutex> guard(mtx);
+    std::cout << str << "\n";
+}
 
 void handleRequest(SOCKET clientSocket) {
-    {
-        std::unique_lock<std::mutex> lock(mtx);
-        ++activeThreads;
-    }
-
     char buffer[4096];
     int bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
     if (bytesReceived > 0) {
@@ -53,6 +46,8 @@ void handleRequest(SOCKET clientSocket) {
         std::istringstream request(buffer);
         std::string method, path, version;
         request >> method >> path >> version;
+
+        std::cout << "Received request: " << method << " " << path << " " << version << std::endl;
 
         if (method == "GET") {
             std::string fullPath = (path == "/") ? "./index.html" : "." + path;
@@ -70,15 +65,10 @@ void handleRequest(SOCKET clientSocket) {
         }
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(3)); // simulating work
-
     closesocket(clientSocket);
-    //std::cout << "Connection closed for " << clientSocket << std::endl;
-    {
-        std::unique_lock<std::mutex> lock(mtx);
-        --activeThreads;
-        cv.notify_one();
-    }
+    std::string threadResut = "Socket closed: ";
+    threadResut.append(std::to_string(clientSocket));
+    lockedConsoleOutput(threadResut);
 }
 
 int main() {
@@ -123,15 +113,6 @@ int main() {
         if (clientSocket == INVALID_SOCKET) {
             std::cerr << "Accept failed\n";
             continue;
-        }
-
-        {
-            std::unique_lock<std::mutex> lock(mtx);
-            if (activeThreads >= totalConnectionsAllowed) {
-                std::cerr << "Connection refused: too many active threads\n";
-                closesocket(clientSocket);
-                continue;
-            }
         }
 
         char clientAddrStr[INET_ADDRSTRLEN];
