@@ -24,7 +24,6 @@ bool endsWith(const std::string& str, const std::string& suffix) {
 std::string getContentType(const std::string& path) {
     if (endsWith(path, ".html")) return "text/html";
     if (endsWith(path, ".css")) return "text/css";
-    if (endsWith(path, ".ico")) return "image/x-icon";
     return "text/plain";
 }
 
